@@ -49,3 +49,50 @@ class CreateBook(graphene.Mutation):
 
         book_instance.save()
         return CreateBook(book=book_instance)
+
+
+class UpdateBook(graphene.Mutation):
+    class Arguments:
+        book_data = BookInput(required=True)
+
+    book = graphene.Field(BookType)
+
+    @staticmethod
+    def mutate(root, info, book_data=None):
+        book_instance = Book.objects.get(pk=book_data.id)
+
+        if book_instance:
+            book_instance.title = book_data.title
+            book_instance.author = book_data.author
+            book_instance.year_published = book_data.year_published
+            book_instance.review = book_data.review
+
+            book_instance.save()
+
+            return UpdateBook(book=book_instance)
+        
+        return UpdateBook(book=None)
+
+
+class DeleteBook(graphene.Mutation):
+    class Arguments:
+        #book_data = BookInput(required=True)
+        id = graphene.ID()
+
+    book = graphene.Field(BookType)
+
+    @staticmethod
+    def mutate(root, info, id):
+        book_instance = Book.objects.get(pk=id)
+        book_instance.delete()
+
+        return None
+
+
+class Mutation(graphene.ObjectType):
+    create_book = CreateBook.Field()
+    update_book = UpdateBook.Field()
+    delete_book = DeleteBook.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
